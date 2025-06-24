@@ -821,12 +821,14 @@ Your configuration has been saved and Ogresync is ready to use!"""
             else:
                 # Obsidian not found - show installation guidance and offer retry
                 self._show_obsidian_installation_guidance()
-                
+
                 # Offer retry after installation guidance
                 if self._offer_retry_after_installation("Obsidian"):
                     # Retry detection
                     return self._step_obsidian_checkup()
                 else:
+                    # User chose not to retry detection; show final instruction dialog
+                    self._show_obsidian_required_dialog()
                     return False, "Obsidian not found. Please install Obsidian and restart the wizard."
         except Exception as e:
             return False, f"Error checking Obsidian: {str(e)}"
@@ -2642,6 +2644,76 @@ Created: {time.strftime('%Y-%m-%d %H:%M:%S')}
             ui_elements.show_premium_error(title, message, self.dialog)
         else:
             messagebox.showerror(title, message)
+
+    def _show_obsidian_required_dialog(self):
+        """Inform the user that Obsidian must be installed to continue."""
+        import webbrowser
+
+        dialog = tk.Toplevel(self.dialog)
+        dialog.title("Obsidian Required")
+        dialog.transient(self.dialog)
+        dialog.grab_set()
+        dialog.resizable(False, False)
+        dialog.configure(bg="#FAFBFC")
+
+        message = (
+            "Obsidian could not be detected automatically.\n"
+            "You must install Obsidian to continue.\n"
+            "Install Obsidian and run the setup again."
+        )
+
+        label = tk.Label(
+            dialog,
+            text=message,
+            font=("Arial", 11),
+            bg="#FAFBFC",
+            fg="#1E293B",
+            wraplength=380,
+            justify=tk.LEFT
+        )
+        label.pack(padx=20, pady=20)
+
+        def open_download():
+            webbrowser.open("https://obsidian.md/download")
+
+        button_frame = tk.Frame(dialog, bg="#FAFBFC")
+        button_frame.pack(pady=(0, 15))
+
+        download_btn = tk.Button(
+            button_frame,
+            text="Open Obsidian Download Page",
+            command=open_download,
+            font=("Arial", 10, "bold"),
+            bg="#6366F1",
+            fg="#FFFFFF",
+            relief=tk.FLAT,
+            cursor="hand2",
+            padx=10,
+            pady=8
+        )
+        download_btn.pack(side=tk.LEFT, padx=(0, 10))
+
+        close_btn = tk.Button(
+            button_frame,
+            text="Close",
+            command=dialog.destroy,
+            font=("Arial", 10),
+            bg="#EF4444",
+            fg="#FFFFFF",
+            relief=tk.FLAT,
+            cursor="hand2",
+            padx=10,
+            pady=8
+        )
+        close_btn.pack(side=tk.LEFT)
+
+        # Center the dialog relative to the parent
+        dialog.update_idletasks()
+        width = dialog.winfo_width()
+        height = dialog.winfo_height()
+        x = (dialog.winfo_screenwidth() // 2) - (width // 2)
+        y = (dialog.winfo_screenheight() // 2) - (height // 2)
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
     
     def _show_obsidian_installation_guidance(self):
         """Shows OS-specific Obsidian installation guidance."""
